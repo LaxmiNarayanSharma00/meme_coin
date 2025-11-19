@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>WebSocket Test Client</title>
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <style>
+        body { font-family: monospace; background: #111; color: #0f0; padding: 20px; }
+        #status { color: #fff; font-weight: bold; margin-bottom: 20px; }
+        .token { border-bottom: 1px solid #333; padding: 5px 0; display: flex; justify-content: space-between; }
+    </style>
+</head>
+<body>
+    <h1>🚀 Live Meme Updates</h1>
+    <div id="status">Connecting...</div>
+    <div id="last-update">Waiting for data...</div>
+    <div id="token-list"></div>
+
+    <script>
+        const socket = io('http://localhost:3000');
+        const statusDiv = document.getElementById('status');
+        const listDiv = document.getElementById('token-list');
+        const timeDiv = document.getElementById('last-update');
+
+        socket.on('connect', () => {
+            statusDiv.innerText = "✅ Connected to WebSocket Server";
+            statusDiv.style.color = "#0f0";
+        });
+
+        socket.on('disconnect', () => {
+            statusDiv.innerText = "❌ Disconnected";
+            statusDiv.style.color = "#f00";
+        });
+
+        // Listen for the event name defined in `dataFetcher.job.ts`
+        socket.on('tokens:update', (payload) => {
+            const date = new Date(payload.timestamp).toLocaleTimeString();
+            timeDiv.innerText = `Last Update: ${date} | Tokens: ${payload.data.length}`;
+            
+            // Render list
+            listDiv.innerHTML = '';
+            payload.data.forEach(token => {
+                const div = document.createElement('div');
+                div.className = 'token';
+                div.innerHTML = `
+                    <span>${token.token_name} ($${token.token_ticker})</span>
+                    <span>Vol: ${token.volume_sol_24h.toFixed(2)} SOL</span>
+                `;
+                listDiv.appendChild(div);
+            });
+            
+            // Flash effect
+            document.body.style.backgroundColor = '#222';
+            setTimeout(() => document.body.style.backgroundColor = '#111', 200);
+        });
+    </script>
+</body>
+</html>

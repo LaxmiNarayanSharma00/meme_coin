@@ -1,0 +1,19 @@
+# docker-compose.yml
+version: '3.8'
+services:
+  redis:
+    image: redis:7-alpine # Lightweight and stable image
+    container_name: meme_aggregator_redis
+    restart: always
+    ports:
+      - "6379:6379" # Maps host port 6379 to container port 6379
+    command: redis-server --requirepass ${REDIS_PASSWORD} # Sets the password
+    environment:
+      # Pass the password from the .env file to the container
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+    volumes:
+      - redis_data:/data # Persist data even if container is stopped/removed
+
+volumes:
+  redis_data:
+    driver: local
