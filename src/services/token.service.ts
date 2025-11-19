@@ -49,14 +49,14 @@ export class TokenService {
      */
     private async fetchOrGetCachedTokens(query: string): Promise<UnifiedToken[]> {
         const cacheKey = `${this.DISCOVERY_CACHE_KEY}:${query}`;
-        
+
         // Try Cache
         const cached = await this.cacheService.get(cacheKey);
         if (cached) return cached;
 
         // Cache Miss: Fetch & Aggregate
         const fresh = await this.aggregationService.aggregate(query);
-        
+
         // Write to Cache (TTL 30s)
         if (fresh.length > 0) {
             await this.cacheService.set(cacheKey, fresh);
@@ -83,25 +83,27 @@ export class TokenService {
         let startIndex = 0;
 
         if (cursor) {
-            // Decode cursor. Example: "20_TokenAddressXYZ"
             try {
                 const decoded = Buffer.from(cursor, 'base64').toString('ascii');
-                const [indexStr, ] = decoded.split('_');
-                startIndex = parseInt(indexStr, 10) + 1; // Start after the last item
-            } catch (e) {
-                // Invalid cursor, start from 0
-                startIndex = 0;
+                const [indexStr] = decoded.split('_');
+                const parsedIndex = parseInt(indexStr, 10);
+
+                // Only accept valid non-negative numbers
+                if (!isNaN(parsedIndex) && parsedIndex >= 0 && parsedIndex < tokens.length) {
+                    startIndex = parsedIndex + 1;
+                }
+            } catch {
+                startIndex = 0; // invalid cursor → reset
             }
         }
 
-        // Slice the data
+        // Slice the tokens for this page
         const pagedData = tokens.slice(startIndex, startIndex + limit);
-        
-        // Generate next cursor
+
+        // Create next cursor
         let nextCursor: string | null = null;
         if (startIndex + limit < tokens.length) {
             const nextIndex = startIndex + limit - 1;
-            // We create a cursor pointing to the last item sent
             const lastItem = pagedData[pagedData.length - 1];
             const rawCursor = `${nextIndex}_${lastItem.token_address}`;
             nextCursor = Buffer.from(rawCursor).toString('base64');
@@ -112,4 +114,5 @@ export class TokenService {
             nextCursor
         };
     }
+
 }

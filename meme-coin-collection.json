@@ -1,0 +1,80 @@
+{
+	"info": {
+		"_postman_id": "meme-coin-backend-task",
+		"name": "Meme Coin Aggregator",
+		"description": "Collection for Backend Task 1: Real-time Data Aggregation",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Get All Tokens (Default)",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/api/v1/tokens",
+					"host": ["{{base_url}}"],
+					"path": ["api", "v1", "tokens"]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Top Gainers (Sort)",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/api/v1/tokens?sort=price_change_24h&order=desc",
+					"host": ["{{base_url}}"],
+					"path": ["api", "v1", "tokens"],
+					"query": [
+						{ "key": "sort", "value": "price_change_24h" },
+						{ "key": "order", "value": "desc" }
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Page 1 (Limit 5)",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/api/v1/tokens?limit=5",
+					"host": ["{{base_url}}"],
+					"path": ["api", "v1", "tokens"],
+					"query": [
+						{ "key": "limit", "value": "5" }
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Next Page (Cursor Example)",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/api/v1/tokens?limit=5&cursor=PASTE_CURSOR_HERE",
+					"host": ["{{base_url}}"],
+					"path": ["api", "v1", "tokens"],
+					"query": [
+						{ "key": "limit", "value": "5" },
+						{ "key": "cursor", "value": "PASTE_CURSOR_HERE", "description": "Copy nextCursor from previous response" }
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "https://meme-coin-yl77.onrender.com",
+			"type": "string"
+		}
+	]
+}
