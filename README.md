@@ -32,12 +32,6 @@ A real-time backend service that aggregates, merges, and caches cryptocurrency d
     ```bash
     npm install
     ```
-3.  Setup Environment:
-    Create a `.env` file:
-    ```env
-    PORT=3000
-    REDIS_URL=redis://:yourpassword@localhost:6379
-    ```
 
 ### Running Locally
 1.  Start Redis:
