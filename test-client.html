@@ -2,57 +2,150 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>WebSocket Test Client</title>
+    <title>Meme Aggregator | Live Terminal</title>
     <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
     <style>
-        body { font-family: monospace; background: #111; color: #0f0; padding: 20px; }
-        #status { color: #fff; font-weight: bold; margin-bottom: 20px; }
-        .token { border-bottom: 1px solid #333; padding: 5px 0; display: flex; justify-content: space-between; }
+        /* --- Broker Platform Theme --- */
+        body { 
+            background-color: #0b0e11; 
+            color: #eaecef; 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0; padding: 20px;
+        }
+
+        header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 20px; border-bottom: 1px solid #2b3139; padding-bottom: 10px;
+        }
+        h1 { margin: 0; font-size: 20px; color: #fcd535; } /* Binance Yellow */
+        
+        /* Status Indicators */
+        #status-bar { font-size: 12px; color: #848e9c; display: flex; gap: 15px; }
+        .live-dot { height: 8px; width: 8px; background-color: #0ecb81; border-radius: 50%; display: inline-block; margin-right: 5px; }
+        .disconnected { background-color: #f6465d; }
+
+        /* --- Data Table --- */
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th { text-align: right; color: #848e9c; font-weight: 400; padding: 8px; border-bottom: 1px solid #2b3139; }
+        th:first-child { text-align: left; } /* Name align left */
+        td { padding: 12px 8px; text-align: right; border-bottom: 1px solid #1e2329; }
+        td:first-child { text-align: left; }
+
+        /* Token Info */
+        .token-name { font-weight: bold; color: #eaecef; }
+        .token-ticker { color: #848e9c; font-size: 11px; margin-left: 5px; }
+        .protocol-tag { font-size: 10px; background: #2b3139; padding: 2px 4px; border-radius: 3px; color: #848e9c; margin-left: 5px;}
+
+        /* Colors */
+        .text-green { color: #0ecb81; }
+        .text-red { color: #f6465d; }
+        .text-dim { color: #5e6673; }
+        
+        /* Flash Animation for Updates */
+        @keyframes flash {
+            0% { background-color: #1e2329; }
+            100% { background-color: transparent; }
+        }
+        .updated-row { animation: flash 0.5s ease-out; }
+
     </style>
 </head>
 <body>
-    <h1>🚀 Live Meme Updates</h1>
-    <div id="status">Connecting...</div>
-    <div id="last-update">Waiting for data...</div>
-    <div id="token-list"></div>
+
+    <header>
+        <h1>⚡ MemeScan Terminal</h1>
+        <div id="status-bar">
+            <span id="connection-status"><span class="live-dot disconnected"></span>Disconnected</span>
+            <span id="last-update">Waiting for feed...</span>
+            <span id="token-count">0 Tokens</span>
+        </div>
+    </header>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Token / Protocol</th>
+                <th>Price (USD)</th>
+                <th>24h Change</th>
+                <th>Volume (24h)</th>
+                <th>Liquidity</th>
+                <th>Txns</th>
+                <th>Source</th>
+            </tr>
+        </thead>
+        <tbody id="market-data">
+            </tbody>
+    </table>
 
     <script>
-        // const socket = io('https://meme-coin-yl77.onrender.com');
-        const socket = io('http://localhost:3000');
-        const statusDiv = document.getElementById('status');
-        const listDiv = document.getElementById('token-list');
-        const timeDiv = document.getElementById('last-update');
+        // 1. Connect to Render (Or localhost if testing locally)
+        const socket = io('https://meme-coin-yl77.onrender.com'); 
+        // const socket = io('http://localhost:3000'); // Uncomment for local testing
 
+        const tableBody = document.getElementById('market-data');
+        const statusSpan = document.getElementById('connection-status');
+        const timeSpan = document.getElementById('last-update');
+        const countSpan = document.getElementById('token-count');
+        const dot = document.querySelector('.live-dot');
+
+        // --- Helper: Format Currency ---
+        const fmtUSD = (num) => {
+            if (num === 0) return '-';
+            if (num < 0.01) return '$' + num.toFixed(8); // Show decimals for memes
+            return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(num);
+        };
+
+        // --- Helper: Format Big Numbers (K, M, B) ---
+        const fmtNum = (num) => {
+            if (num > 1000000) return (num / 1000000).toFixed(2) + 'M';
+            if (num > 1000) return (num / 1000).toFixed(2) + 'K';
+            return num.toFixed(2);
+        };
+
+        // --- Socket Events ---
         socket.on('connect', () => {
-            statusDiv.innerText = "✅ Connected to WebSocket Server";
-            statusDiv.style.color = "#0f0";
+            statusSpan.innerHTML = '<span class="live-dot"></span>Connected';
+            dot.classList.remove('disconnected');
         });
 
         socket.on('disconnect', () => {
-            statusDiv.innerText = "❌ Disconnected";
-            statusDiv.style.color = "#f00";
+            statusSpan.innerHTML = '<span class="live-dot disconnected"></span>Reconnecting...';
         });
 
-        // Listen for the event name defined in `dataFetcher.job.ts`
         socket.on('tokens:update', (payload) => {
+            // Update Metadata
             const date = new Date(payload.timestamp).toLocaleTimeString();
-            timeDiv.innerText = `Last Update: ${date} | Tokens: ${payload.data.length}`;
-            
-            // Render list
-            listDiv.innerHTML = '';
-            payload.data.forEach(token => {
-                const div = document.createElement('div');
-                div.className = 'token';
-                div.innerHTML = `
-                    <span>${token.token_name} ($${token.token_ticker})</span>
-                    <span>Vol: ${token.volume_sol_24h.toFixed(2)} SOL</span>
+            timeSpan.innerText = `Last Update: ${date}`;
+            countSpan.innerText = `${payload.data.length} Active Pairs`;
+
+            // Clear Table
+            tableBody.innerHTML = '';
+
+            // Sort by Volume (Highest first) just to be safe
+            const sortedData = payload.data.sort((a, b) => b.volume_sol_24h - a.volume_sol_24h);
+
+            sortedData.forEach(token => {
+                const row = document.createElement('tr');
+                row.classList.add('updated-row');
+
+                // Calculate color class for price change
+                const changeClass = token.price_change_24h >= 0 ? 'text-green' : 'text-red';
+                const sign = token.price_change_24h >= 0 ? '+' : '';
+
+                row.innerHTML = `
+                    <td>
+                        <div class="token-name">${token.token_name} <span class="token-ticker">${token.token_ticker}</span></div>
+                        <div class="protocol-tag">${token.protocol || 'Unknown'}</div>
+                    </td>
+                    <td style="font-family: monospace;">${fmtUSD(token.price_usd)}</td>
+                    <td class="${changeClass}">${sign}${token.price_change_24h.toFixed(2)}%</td>
+                    <td>${fmtNum(token.volume_sol_24h)} SOL</td>
+                    <td>${fmtNum(token.liquidity_sol)} SOL</td>
+                    <td>${token.transaction_count_24h.toLocaleString()}</td>
+                    <td class="text-dim">${token.source_count} Dexs</td>
                 `;
-                listDiv.appendChild(div);
+                tableBody.appendChild(row);
             });
-            
-            // Flash effect
-            document.body.style.backgroundColor = '#222';
-            setTimeout(() => document.body.style.backgroundColor = '#111', 200);
         });
     </script>
 </body>

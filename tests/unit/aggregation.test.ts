@@ -1,13 +1,13 @@
-// tests/unit/aggregation.test.ts
+
 import { AggregationService } from '../../src/services/aggregation.service';
 import { UnifiedToken } from '../../src/interfaces/token.interface';
 
-// Mock the providers to control what data they return
+
 jest.mock('../../src/services/providers/dexscreener');
 jest.mock('../../src/services/providers/jupiter');
 
 describe('AggregationService Unit Tests', () => {
-    // Create a simple mock token factory
+
     const mockToken = (address: string, volume: number, price: number, source: string): UnifiedToken => ({
         token_address: address,
         token_name: `Token ${address}`,
@@ -31,7 +31,7 @@ describe('AggregationService Unit Tests', () => {
         const tokenA2 = mockToken('ADDR_1', 50, 2.0, 'Jupiter');
         const tokenB = mockToken('ADDR_2', 200, 3.0, 'DexScreener');
 
-        // Configure mocks to return specific arrays
+
         require('../../src/services/providers/dexscreener').DexScreenerProvider.prototype.fetchAndNormalizeTokens.mockResolvedValue([tokenA1, tokenB]);
         require('../../src/services/providers/jupiter').JupiterProvider.prototype.fetchAndNormalizeTokens.mockResolvedValue([tokenA2]);
         
@@ -42,14 +42,14 @@ describe('AggregationService Unit Tests', () => {
 
         const mergedA = mergedTokens.find(t => t.token_address === 'ADDR_1');
 
-        // Check Summation: Volume should be 100 + 50 = 150
+
         expect(mergedA?.volume_sol_24h).toBe(150);
-        // Check Averaging: Price USD should be (100 + 200) / 2 = 150 (if price was 1 and 2, average is 1.5)
-        expect(mergedA?.price_sol).toBe(1.5); // (1.0 + 2.0) / 2
-        // Check Source Count
+
+        expect(mergedA?.price_sol).toBe(1.5); 
+ 
         expect(mergedA?.source_count).toBe(2); 
         
-        // Check Token B passed through correctly
+
         const tokenBResult = mergedTokens.find(t => t.token_address === 'ADDR_2');
         expect(tokenBResult?.volume_sol_24h).toBe(200);
     });

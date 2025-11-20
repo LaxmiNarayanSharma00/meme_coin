@@ -1,4 +1,4 @@
-// src/controllers/token.controller.ts
+
 
 import { Request, Response } from 'express';
 import { TokenService } from '../services/token.service';
@@ -8,21 +8,19 @@ const tokenService = new TokenService();
 
 export class TokenController {
     
-    /**
-     * Handler for GET /api/v1/tokens
-     */
+
     async getTokens(req: Request, res: Response) {
         try {
-            // 1. Extract Query Parameters
-            const query = (req.query.query as string) || 'SOL'; // Default search
+          
+            const query = (req.query.query as string) || 'SOL'; 
             const limit = parseInt(req.query.limit as string) || 20;
             const cursor = req.query.cursor as string;
             
-            // Sorting params
+            
             const sort = (req.query.sort as keyof UnifiedToken) || 'volume_sol_24h';
             const order = (req.query.order as 'asc' | 'desc') || 'desc';
 
-            // 2. Call Service
+            
             const result = await tokenService.getTokens({
                 query,
                 sortBy: sort,
@@ -31,7 +29,7 @@ export class TokenController {
                 cursor
             });
 
-            // 3. Send Response
+            
             res.status(200).json({
                 success: true,
                 count: result.data.length,

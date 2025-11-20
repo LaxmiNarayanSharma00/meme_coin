@@ -1,12 +1,9 @@
-// src/services/providers/dexscreener.ts
+
 
 import { BaseProvider } from './base.provider';
 import { UnifiedToken } from '../../interfaces/token.interface';
-import httpClient from '../../lib/httpClient'; // Your robust client
+import httpClient from '../../lib/httpClient'; 
 
-/**
- * Provider for the DexScreener API.
- */
 export class DexScreenerProvider extends BaseProvider {
     protected apiUrl = 'https://api.dexscreener.com/latest/dex';
     protected sourceName = 'DexScreener';
@@ -22,17 +19,17 @@ export class DexScreenerProvider extends BaseProvider {
                 return [];
             }
 
-            // Map the raw data to the UnifiedToken structure
+
             return rawPairs.map((pair: any): UnifiedToken => ({
                 token_address: pair.baseToken.address,
                 token_name: pair.baseToken.name,
                 token_ticker: pair.baseToken.symbol,
                 protocol: pair.dexId, 
-                price_sol: pair.priceNative ? parseFloat(pair.priceNative) : 0, // Using Native (e.g., SOL)
+                price_sol: pair.priceNative ? parseFloat(pair.priceNative) : 0, 
                 price_usd: pair.priceUsd ? parseFloat(pair.priceUsd) : 0,
-                market_cap_sol: pair.fdv || 0, // DexScreener uses FDV
+                market_cap_sol: pair.fdv || 0, 
                 volume_sol_24h: pair.volume?.h24 || 0,
-                liquidity_sol: pair.liquidity?.native || 0, // Using Native (e.g., SOL)
+                liquidity_sol: pair.liquidity?.native || 0, 
                 transaction_count_24h: (pair.txns?.h24?.buys || 0) + (pair.txns?.h24?.sells || 0),
                 price_change_1h: pair.priceChange?.h1 || 0,
                 price_change_24h: pair.priceChange?.h24 || 0,
@@ -42,7 +39,7 @@ export class DexScreenerProvider extends BaseProvider {
 
         } catch (error: any) {
             console.error(`[${this.sourceName} Error] Failed to fetch data:`, error.message);
-            // Return empty array on failure, the AggregationService handles this
+            
             return [];
         }
     }

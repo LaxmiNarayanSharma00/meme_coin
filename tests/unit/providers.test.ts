@@ -1,9 +1,9 @@
-// tests/unit/providers.test.ts
+
 import { DexScreenerProvider } from '../../src/services/providers/dexscreener';
 import httpClient from '../../src/lib/httpClient'; 
 import { UnifiedToken } from '../../src/interfaces/token.interface';
 
-// Mock the entire httpClient module to control its .get() method
+
 jest.mock('../../src/lib/httpClient', () => ({
     get: jest.fn(),
 }));
@@ -34,14 +34,14 @@ describe('DexScreenerProvider Unit Tests', () => {
         expect(tokens).toHaveLength(1);
         const token: UnifiedToken = tokens[0];
 
-        // 1. Check normalization and type conversion
+
         expect(token.token_address).toBe('ADDR_A');
         expect(token.token_ticker).toBe('MCA');
         expect(token.price_usd).toBe(0.00456);
         expect(token.volume_sol_24h).toBe(1000);
         
-        // 2. Check derived metrics (transaction count)
-        expect(token.transaction_count_24h).toBe(15); // 10 buys + 5 sells
+
+        expect(token.transaction_count_24h).toBe(15); 
     });
 
     it('should return empty array on API failure', async () => {

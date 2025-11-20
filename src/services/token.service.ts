@@ -1,4 +1,4 @@
-// src/services/token.service.ts
+
 
 import { CacheService } from './cache.service';
 import { AggregationService } from './aggregation.service';
@@ -6,10 +6,10 @@ import { UnifiedToken } from '../interfaces/token.interface';
 
 export interface GetTokensOptions {
     query: string;
-    sortBy?: keyof UnifiedToken; // e.g., 'volume_sol_24h', 'market_cap_sol'
+    sortBy?: keyof UnifiedToken; 
     sortOrder?: 'asc' | 'desc';
     limit?: number;
-    cursor?: string; // encoded string for pagination
+    cursor?: string; 
 }
 
 export interface PaginatedResponse {
@@ -27,46 +27,37 @@ export class TokenService {
         this.aggregationService = new AggregationService();
     }
 
-    /**
-     * Core method: Fetches, Sorts, and Paginates tokens.
-     */
+
     async getTokens(options: GetTokensOptions): Promise<PaginatedResponse> {
         const { query, sortBy = 'volume_sol_24h', sortOrder = 'desc', limit = 20, cursor } = options;
 
-        // 1. Get ALL data (Cache First -> Then API)
-        // Note: We fetch the full list because we need to sort the whole dataset to paginate correctly.
+
         const allTokens = await this.fetchOrGetCachedTokens(query);
 
-        // 2. Apply Sorting
         const sortedTokens = this.sortTokens(allTokens, sortBy, sortOrder);
 
-        // 3. Apply Cursor-Based Pagination
         return this.paginateTokens(sortedTokens, limit, cursor);
     }
 
-    /**
-     * Helper: Cache Look-aside Pattern
-     */
+
     private async fetchOrGetCachedTokens(query: string): Promise<UnifiedToken[]> {
         const cacheKey = `${this.DISCOVERY_CACHE_KEY}:${query}`;
 
-        // Try Cache
+        
         const cached = await this.cacheService.get(cacheKey);
         if (cached) return cached;
 
-        // Cache Miss: Fetch & Aggregate
+
         const fresh = await this.aggregationService.aggregate(query);
 
-        // Write to Cache (TTL 30s)
+        
         if (fresh.length > 0) {
             await this.cacheService.set(cacheKey, fresh);
         }
         return fresh;
     }
 
-    /**
-     * Helper: In-Memory Sorting
-     */
+
     private sortTokens(tokens: UnifiedToken[], key: keyof UnifiedToken, order: 'asc' | 'desc'): UnifiedToken[] {
         return [...tokens].sort((a, b) => {
             const valA = a[key] as number || 0;
@@ -75,10 +66,7 @@ export class TokenService {
         });
     }
 
-    /**
-     * Helper: Cursor Pagination Logic
-     * Cursor Format: "index_tokenAddress" (Simple pointer approach for cached lists)
-     */
+
     private paginateTokens(tokens: UnifiedToken[], limit: number, cursor?: string): PaginatedResponse {
         let startIndex = 0;
 
@@ -88,19 +76,19 @@ export class TokenService {
                 const [indexStr] = decoded.split('_');
                 const parsedIndex = parseInt(indexStr, 10);
 
-                // Only accept valid non-negative numbers
+
                 if (!isNaN(parsedIndex) && parsedIndex >= 0 && parsedIndex < tokens.length) {
                     startIndex = parsedIndex + 1;
                 }
             } catch {
-                startIndex = 0; // invalid cursor → reset
+                startIndex = 0; 
             }
         }
 
-        // Slice the tokens for this page
+
         const pagedData = tokens.slice(startIndex, startIndex + limit);
 
-        // Create next cursor
+
         let nextCursor: string | null = null;
         if (startIndex + limit < tokens.length) {
             const nextIndex = startIndex + limit - 1;

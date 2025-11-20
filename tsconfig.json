@@ -2,7 +2,7 @@
   "compilerOptions": {
     "target": "ES2020",
     "module": "CommonJS",
-    "rootDir": "./src",               // <--- This is strict
+    "rootDir": "./src",               
     "outDir": "./dist",
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
@@ -11,11 +11,11 @@
     "resolveJsonModule": true
   },
   "include": [
-    "src/**/*"                        // <--- Only compile files inside src
+    "src/**/*"                        
   ],
   "exclude": [
     "node_modules",
-    "tests",                          // <--- Explicitly ignore the tests folder
+    "tests",                          
     "**/*.test.ts"
   ]
 }
